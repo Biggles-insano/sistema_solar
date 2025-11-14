@@ -1,6 +1,7 @@
 use minifb::{Window, WindowOptions};
 use cgmath::Vector3;
 use crate::planet::Planet;
+use std::f32::consts::PI;
 
 pub struct Renderer {
     pub window: Window,
@@ -57,6 +58,8 @@ impl Renderer {
         }
         self.buffer[y * self.width + x] = color;
     }
+
+    // Removed put_trail_pixel and blend_trails functions
 
     // Pequeño helper para aplicar intensidad de luz al color base
     fn shade_color(base: u32, intensity: f32) -> u32 {
@@ -170,14 +173,99 @@ impl Renderer {
         }
     }
 
+    fn draw_stars(&mut self) {
+        // fondo sencillo de estrellas pseudo-aleatorias (skybox)
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let idx = (x as u32).wrapping_mul(1973)
+                    ^ (y as u32).wrapping_mul(9277)
+                    ^ 0x12345;
+                // pocas estrellas, algunas más brillantes que otras
+                if idx % 5000 == 0 {
+                    self.buffer[y * self.width + x] = 0x222233;
+                } else if idx % 9000 == 0 {
+                    self.buffer[y * self.width + x] = 0x555577;
+                }
+            }
+        }
+    }
+
+    fn draw_orbit(&mut self, center: (f32, f32), radius: f32, color: u32) {
+        let (cx, cy) = center;
+        let steps = 360;
+        for i in 0..steps {
+            let t = i as f32 / steps as f32 * 2.0 * PI;
+            let x = cx + radius * t.cos();
+            let y = cy + radius * t.sin();
+            self.put_pixel(x.round() as i32, y.round() as i32, color);
+        }
+    }
+
+    fn draw_ship(&mut self, screen_pos: (f32, f32)) {
+        let (cx, cy) = screen_pos;
+        let cx = cx.round() as i32;
+        let cy = cy.round() as i32;
+
+        let body_color = 0xFFFFFF;
+        let wing_color = 0x8899FF;
+        let flame_color = 0xFF8844;
+
+        // cuerpo principal (triángulo/aguja hacia arriba)
+        let h: i32 = 14;
+        for dy in -h..=h {
+            let w = (h - dy.abs()) / 2;
+            for dx in -w..=w {
+                self.put_pixel(cx + dx, cy - dy, body_color);
+            }
+        }
+
+        // alas laterales
+        for dx in -18..=-10 {
+            self.put_pixel(cx + dx, cy + 2, wing_color);
+            self.put_pixel(cx + dx, cy + 3, wing_color);
+        }
+        for dx in 10..=18 {
+            self.put_pixel(cx + dx, cy + 2, wing_color);
+            self.put_pixel(cx + dx, cy + 3, wing_color);
+        }
+
+        // pequeña flama en la parte inferior
+        for dy in 0..6 {
+            for dx in -2..=2 {
+                self.put_pixel(cx + dx, cy + h + dy, flame_color);
+            }
+        }
+    }
+
     pub fn render_scene(&mut self, planets: &Vec<Planet>, time: f32) {
         self.clear();
+        self.draw_stars();
 
         let center_x = (self.width as f32) * 0.5;
         let center_y = (self.height as f32) * 0.5;
 
-        // El sol lo seguimos dibujando en el centro de pantalla como referencia de luz
-        let sun_screen = (center_x, center_y);
+        // Posición del sol en el mundo (en nuestro caso, el origen)
+        let sun_world = Vector3::new(0.0, 0.0, 0.0);
+        let sun_rel = Vector3::new(
+            sun_world.x - self.camera_pos.x,
+            sun_world.y - self.camera_pos.y,
+            sun_world.z - self.camera_pos.z,
+        );
+
+        // Proyección del sol a coordenadas de pantalla (también usada como centro de las órbitas)
+        let sun_screen = (
+            center_x + sun_rel.x * self.zoom,
+            center_y + sun_rel.z * self.zoom,
+        );
+
+        // Dibujar órbitas de los planetas (círculos en el plano eclíptico) alrededor del sol proyectado
+        for planet in planets {
+            if planet.is_sun {
+                continue;
+            }
+            let orbit_r = planet.distance_from_sun * self.zoom;
+            self.draw_orbit(sun_screen, orbit_r, 0x444444);
+        }
 
         for planet in planets {
             let pos = planet.orbit_position(time);
@@ -193,6 +281,8 @@ impl Renderer {
             // todo se aleja/acerca del centro de pantalla
             let screen_x = center_x + rel.x * self.zoom;
             let screen_y = center_y + rel.z * self.zoom;
+
+            // Removed trail pixel drawing
 
             // El radio también escala con el zoom
             let scaled_radius = planet.radius * self.zoom;
@@ -211,6 +301,10 @@ impl Renderer {
                 self.draw_ring((screen_x, screen_y), inner, outer, ring_color);
             }
         }
+
+        // Dibujar la nave que sigue a la cámara (como si la cámara estuviera justo detrás)
+        let ship_screen = (center_x, center_y + 140.0);
+        self.draw_ship(ship_screen);
 
         self.window
             .update_with_buffer(&self.buffer, self.width, self.height)
