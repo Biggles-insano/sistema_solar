@@ -1,7 +1,6 @@
 extern crate minifb;
-use minifb::{Window, WindowOptions};
-use cgmath::{Matrix4, Vector3};
-use std::f32::consts::PI;
+
+use minifb::Key;
 use crate::planet::Planet;
 use crate::renderer::Renderer;
 
@@ -23,7 +22,45 @@ fn main() {
     let mut renderer = Renderer::new();
     let mut time: f32 = 0.0;
 
-    while renderer.window.is_open() && !renderer.window.is_key_down(minifb::Key::Escape) {
+    // Velocidades de cámara y zoom
+    let camera_speed: f32 = 4.0;
+    let zoom_step: f32 = 0.03;
+
+    while renderer.window.is_open() && !renderer.window.is_key_down(Key::Escape) {
+        // Controles de cámara en el plano eclíptico (XZ)
+        if renderer.window.is_key_down(Key::A) {
+            // Mover cámara a la izquierda (decrementa X)
+            renderer.camera_pos.x -= camera_speed;
+        }
+        if renderer.window.is_key_down(Key::D) {
+            // Mover cámara a la derecha (incrementa X)
+            renderer.camera_pos.x += camera_speed;
+        }
+        if renderer.window.is_key_down(Key::W) {
+            // Mover cámara "hacia adelante" (acerca al sol, decrementa Z)
+            renderer.camera_pos.z -= camera_speed;
+        }
+        if renderer.window.is_key_down(Key::S) {
+            // Mover cámara "hacia atrás" (se aleja, incrementa Z)
+            renderer.camera_pos.z += camera_speed;
+        }
+
+        // Zoom con Q/E
+        if renderer.window.is_key_down(Key::Q) {
+            renderer.zoom += zoom_step;
+        }
+        if renderer.window.is_key_down(Key::E) {
+            renderer.zoom -= zoom_step;
+        }
+        // Limitar el zoom a un rango razonable
+        if renderer.zoom < 0.3 {
+            renderer.zoom = 0.3;
+        }
+        if renderer.zoom > 3.0 {
+            renderer.zoom = 3.0;
+        }
+
+        // Avanzar el tiempo para las órbitas/rotaciones
         time += 0.01;
         renderer.render_scene(&planets, time);
     }
