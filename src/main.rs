@@ -27,23 +27,39 @@ fn main() {
     let zoom_step: f32 = 0.03;
 
     while renderer.window.is_open() && !renderer.window.is_key_down(Key::Escape) {
-        // Controles de cámara en el plano eclíptico (XZ)
-        if renderer.window.is_key_down(Key::A) {
-            // Mover cámara a la izquierda (decrementa X)
-            renderer.camera_pos.x -= camera_speed;
+        // --- Movimiento acelerado de la cámara ---
+        // Creamos velocidades si no existen
+        thread_local! {
+            static CAM_VEL_X: std::cell::RefCell<f32> = std::cell::RefCell::new(0.0);
+            static CAM_VEL_Z: std::cell::RefCell<f32> = std::cell::RefCell::new(0.0);
         }
-        if renderer.window.is_key_down(Key::D) {
-            // Mover cámara a la derecha (incrementa X)
-            renderer.camera_pos.x += camera_speed;
-        }
-        if renderer.window.is_key_down(Key::W) {
-            // Mover cámara "hacia adelante" (acerca al sol, decrementa Z)
-            renderer.camera_pos.z -= camera_speed;
-        }
-        if renderer.window.is_key_down(Key::S) {
-            // Mover cámara "hacia atrás" (se aleja, incrementa Z)
-            renderer.camera_pos.z += camera_speed;
-        }
+
+        let accel: f32 = 0.5;
+        let friction: f32 = 0.9;
+
+        CAM_VEL_X.with(|vx| {
+            let mut vx = vx.borrow_mut();
+            if renderer.window.is_key_down(Key::A) {
+                *vx -= accel;
+            }
+            if renderer.window.is_key_down(Key::D) {
+                *vx += accel;
+            }
+            *vx *= friction; // fricción
+            renderer.camera_pos.x += *vx;
+        });
+
+        CAM_VEL_Z.with(|vz| {
+            let mut vz = vz.borrow_mut();
+            if renderer.window.is_key_down(Key::W) {
+                *vz -= accel;
+            }
+            if renderer.window.is_key_down(Key::S) {
+                *vz += accel;
+            }
+            *vz *= friction; // fricción
+            renderer.camera_pos.z += *vz;
+        });
 
         // Zoom con Q/E
         if renderer.window.is_key_down(Key::Q) {

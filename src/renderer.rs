@@ -208,37 +208,60 @@ impl Renderer {
     }
 
     fn draw_ship(&mut self, screen_pos: (f32, f32)) {
-        let (cx, cy) = screen_pos;
-        let cx = cx.round() as i32;
-        let cy = cy.round() as i32;
+        let (cx_f, cy_f) = screen_pos;
+        let cx = cx_f.round() as i32;
+        let cy = cy_f.round() as i32;
 
-        let body_color = 0xFFFFFF;
-        let wing_color = 0x8899FF;
-        let flame_color = 0xFF8844;
+        // Colores base para el TIE Fighter
+        let body_color = 0xB3B3B3; // color gris claro
+        let wing_color = 0x444444; // alas oscuras
+        let engine_color = 0x66CCFF; // motores azules
 
-        // cuerpo principal (triángulo/aguja hacia arriba)
-        let h: i32 = 14;
-        for dy in -h..=h {
-            let w = (h - dy.abs()) / 2;
-            for dx in -w..=w {
-                self.put_pixel(cx + dx, cy - dy, body_color);
+        let body_radius: f32 = 12.0; // cuerpo principal
+
+        // Cuerpo principal (un disco con dos alas)
+        for dy in -(body_radius as i32)..=(body_radius as i32) {
+            for dx in -body_radius as i32..=body_radius as i32 {
+                let fx = dx as f32;
+                let fy = dy as f32;
+                let dist2 = fx * fx + fy * fy;
+                if dist2 > body_radius * body_radius {
+                    continue;
+                }
+
+                // Patrón de sombras en el cuerpo
+                let panel_pattern =
+                    ((fx * 0.5).sin() * (fy * 0.5).cos()).abs(); // 0..1
+                let intensity = 0.7 + 0.3 * panel_pattern;
+                let color = Renderer::shade_color(body_color, intensity as f32);
+
+                self.put_pixel(cx + dx, cy + dy, color);
             }
         }
 
-        // alas laterales
-        for dx in -18..=-10 {
-            self.put_pixel(cx + dx, cy + 2, wing_color);
-            self.put_pixel(cx + dx, cy + 3, wing_color);
-        }
-        for dx in 10..=18 {
-            self.put_pixel(cx + dx, cy + 2, wing_color);
-            self.put_pixel(cx + dx, cy + 3, wing_color);
+        // Alas del TIE Fighter (dos rectángulos a cada lado)
+        let wing_width = 16;
+        let wing_height = 6;
+
+        // Alas superiores
+        for dy in -wing_height..=wing_height {
+            for dx in -wing_width..=-8 {
+                self.put_pixel(cx + dx, cy + dy, wing_color);
+            }
+            for dx in 8..=wing_width {
+                self.put_pixel(cx + dx, cy + dy, wing_color);
+            }
         }
 
-        // pequeña flama en la parte inferior
-        for dy in 0..6 {
-            for dx in -2..=2 {
-                self.put_pixel(cx + dx, cy + h + dy, flame_color);
+        // Motores traseros (dos pequeños círculos en la parte inferior)
+        let engine_radius: f32 = 3.0;
+        for dy in 10..=12 {
+            for dx in -4..=4 {
+                let fx = dx as f32;
+                let fy = (dy - 10) as f32;
+                if fx * fx + fy * fy <= engine_radius * engine_radius {
+                    self.put_pixel(cx + dx, cy + dy, engine_color);
+                }
             }
         }
     }
