@@ -1,1 +1,6 @@
-/target
+# Ignorar archivos generados por Cargo (Rust)
+/target/
+/Cargo.lock
+
+# Ignorar archivos del sistema (por ejemplo, .DS_Store en macOS)
+.DS_Store
