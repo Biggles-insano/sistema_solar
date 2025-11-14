@@ -174,17 +174,23 @@ impl Renderer {
     }
 
     fn draw_stars(&mut self) {
-        // fondo sencillo de estrellas pseudo-aleatorias (skybox)
+        // fondo de estrellas más visibles (skybox 2D)
         for y in 0..self.height {
             for x in 0..self.width {
                 let idx = (x as u32).wrapping_mul(1973)
                     ^ (y as u32).wrapping_mul(9277)
                     ^ 0x12345;
-                // pocas estrellas, algunas más brillantes que otras
-                if idx % 5000 == 0 {
-                    self.buffer[y * self.width + x] = 0x222233;
-                } else if idx % 9000 == 0 {
-                    self.buffer[y * self.width + x] = 0x555577;
+
+                // Unos cuantos niveles de brillo para que se note más
+                if idx % 1500 == 0 {
+                    // estrella muy brillante (blanca)
+                    self.buffer[y * self.width + x] = 0xFFFFFF;
+                } else if idx % 3000 == 0 {
+                    // estrella media (gris claro)
+                    self.buffer[y * self.width + x] = 0xCCCCCC;
+                } else if idx % 6000 == 0 {
+                    // estrella tenue (azulado)
+                    self.buffer[y * self.width + x] = 0x9999FF;
                 }
             }
         }
