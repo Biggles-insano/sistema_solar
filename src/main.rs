@@ -11,11 +11,11 @@ fn main() {
     // Crear los planetas (sol + 6 planetas) con colores
     let sun     = Planet::new("Sol",      30.0,    0.0,    0.0,   0.0,   0xFFCC33, true);
     let mercury = Planet::new("Mercurio",  6.0,   150.0,   0.05,  0.10,  0xAAAAAA, false);
-    let venus   = Planet::new("Venus",    10.0,   260.0,   0.035, 0.09,  0xFFCC88, false);
-    let earth   = Planet::new("Tierra",   11.0,   380.0,   0.03,  0.12,  0x3366FF, false);
-    let mars    = Planet::new("Marte",     9.0,   500.0,   0.026, 0.11,  0xCC5533, false);
-    let jupiter = Planet::new("Júpiter",  18.0,   650.0,   0.018, 0.20,  0xDDBB88, false);
-    let saturn  = Planet::new("Saturno",  16.0,   820.0,   0.014, 0.18,  0xEEDD99, false);
+    let venus   = Planet::new("Venus",    10.0,   260.0,   0.035, 0.09, 0xFFCC88, false);
+    let earth   = Planet::new("Tierra",   11.0,   380.0,   0.03,  0.12, 0x3366FF, false);
+    let mars    = Planet::new("Marte",     9.0,   500.0,   0.026, 0.11, 0xCC5533, false);
+    let jupiter = Planet::new("Júpiter",  18.0,   650.0,   0.018, 0.20, 0xDDBB88, false);
+    let saturn  = Planet::new("Saturno",  16.0,   820.0,   0.014, 0.18, 0xEEDD99, false);
 
     let planets = vec![sun, mercury, venus, earth, mars, jupiter, saturn];
 
@@ -26,9 +26,17 @@ fn main() {
     let camera_speed: f32 = 4.0;
     let zoom_step: f32 = 0.03;
 
+    // Mostrar controles en pantalla
+    println!("Controles:");
+    println!("W/S: Mover la cámara hacia adelante/atrás");
+    println!("A/D: Mover la cámara a la izquierda/derecha");
+    println!("Q/E: Zoom");
+    println!("T: Teletransportarse a otro planeta");
+    println!("Esc: Salir");
+
+    // Bucle principal de la ventana
     while renderer.window.is_open() && !renderer.window.is_key_down(Key::Escape) {
-        // --- Movimiento acelerado de la cámara ---
-        // Creamos velocidades si no existen
+        // Movimiento acelerado de la cámara
         thread_local! {
             static CAM_VEL_X: std::cell::RefCell<f32> = std::cell::RefCell::new(0.0);
             static CAM_VEL_Z: std::cell::RefCell<f32> = std::cell::RefCell::new(0.0);
@@ -78,6 +86,8 @@ fn main() {
 
         // Avanzar el tiempo para las órbitas/rotaciones
         time += 0.01;
+
+        // Renderizar la escena
         renderer.render_scene(&planets, time);
     }
 }

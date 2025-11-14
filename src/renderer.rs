@@ -216,6 +216,7 @@ impl Renderer {
         let body_color = 0xB3B3B3; // color gris claro
         let wing_color = 0x444444; // alas oscuras
         let engine_color = 0x66CCFF; // motores azules
+        let cockpit_color = 0x9999FF; // cabina
 
         let body_radius: f32 = 12.0; // cuerpo principal
 
@@ -261,6 +262,20 @@ impl Renderer {
                 let fy = (dy - 10) as f32;
                 if fx * fx + fy * fy <= engine_radius * engine_radius {
                     self.put_pixel(cx + dx, cy + dy, engine_color);
+                }
+            }
+        }
+
+        // Cabina del TIE Fighter (en el centro)
+        let cockpit_radius = 3.5;
+        for dy in -4..=4 {
+            for dx in -5..=5 {
+                let fx = dx as f32;
+                let fy = dy as f32;
+                if fx * fx + fy * fy <= cockpit_radius * cockpit_radius {
+                    let intensity = ((fx * 0.7).sin() * (fy * 0.7).cos()).abs();
+                    let color = Renderer::shade_color(cockpit_color, (0.8 + 0.2 * intensity) as f32);
+                    self.put_pixel(cx + dx, cy + dy, color);
                 }
             }
         }
