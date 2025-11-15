@@ -1,5 +1,14 @@
 Este proyecto es una simulación variante del sistema solar, en la que los planetas giran alrededor del sol, rotan sobre su eje, y se puede explorar la escena en 3D. La simulación incluye un TIE Fighter como nave espacial y un skybox de estrellas que crea un fondo espacial dinámico.
 
+## Video Demostrativo
+
+Aquí está el video demostrativo de la simulación:
+
+<video width="640" height="360" controls>
+  <source src="video.mov" type="video/mp4">
+  Tu navegador no soporta el elemento de video.
+</video>
+
 Requisitos
 	•	Rust: La simulación está escrita en Rust, por lo que necesitarás tener instalado Rust￼ para compilar y ejecutar el proyecto.
 
