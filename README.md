@@ -5,7 +5,7 @@ Este proyecto es una simulación variante del sistema solar, en la que los plane
 Aquí está el video demostrativo de la simulación:
 
 <video width="640" height="360" controls>
-  <source src="video.mov" type="video/mp4">
+  <source src="video.mp4" type="video/mp4">
   Tu navegador no soporta el elemento de video.
 </video>
 
